@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 /** SentenceBuilder: o aluno toca as palavras na ordem certa para formar a frase. */
-export default function SentenceBuilder({ words, correctOrder, translation }) {
+export default function SentenceBuilder({ words, correctOrder, translation, onComplete }) {
   const [available, setAvailable] = useState(words.map((w, i) => ({ w, i })));
   const [chosen, setChosen] = useState([]);
 
@@ -20,6 +20,11 @@ export default function SentenceBuilder({ words, correctOrder, translation }) {
 
   const done = available.length === 0;
   const isCorrect = done && chosen.map((c) => c.w).join(" ") === correctOrder.join(" ");
+
+  useEffect(() => {
+    if (isCorrect && onComplete) onComplete();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCorrect]);
 
   return (
     <div className="sentence-builder">
