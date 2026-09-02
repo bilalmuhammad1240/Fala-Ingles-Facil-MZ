@@ -1,14 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-export default function TrueFalse({ items, onComplete }) {
+export default function TrueFalse({ items }) {
   const [answers, setAnswers] = useState({});
-
-  const allAnswered = Object.keys(answers).length === items.length;
-
-  useEffect(() => {
-    if (allAnswered && onComplete) onComplete();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allAnswered]);
 
   return (
     <div className="truefalse">
