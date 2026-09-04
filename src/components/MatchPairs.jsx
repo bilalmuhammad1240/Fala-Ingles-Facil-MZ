@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function shuffle(arr) {
   const a = [...arr];
@@ -9,8 +9,7 @@ function shuffle(arr) {
   return a;
 }
 
-/** MatchPairs: toca uma palavra em inglês e depois a tradução correspondente. */
-export default function MatchPairs({ pairs }) {
+export default function MatchPairs({ pairs, onComplete }) {
   const [enOrder] = useState(() => shuffle(pairs.map((p, i) => ({ ...p, i }))));
   const [ptOrder] = useState(() => shuffle(pairs.map((p, i) => ({ ...p, i }))));
   const [selectedEn, setSelectedEn] = useState(null);
@@ -35,6 +34,11 @@ export default function MatchPairs({ pairs }) {
   }
 
   const done = matched.length === pairs.length;
+
+  useEffect(() => {
+    if (done && onComplete) onComplete();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [done]);
 
   return (
     <div className="match-pairs">

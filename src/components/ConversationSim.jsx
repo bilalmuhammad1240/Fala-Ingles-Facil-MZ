@@ -6,6 +6,7 @@ import { normalize } from "../lib/text";
  * ConversationSim: pequena simulação de conversa.
  * steps: array de { speaker: "them"|"you", en, pt, expected[], hintEn, hintPt }
  * Nas falas "you", o aluno tem de escrever a resposta (produção, não múltipla escolha).
+ * Nas falas "them", o aluno toca "Continuar" para avançar (sem autoplay/temporizador).
  */
 export default function ConversationSim({ steps, onComplete }) {
   const [revealed, setRevealed] = useState(1);
@@ -16,25 +17,34 @@ export default function ConversationSim({ steps, onComplete }) {
   const finished = revealed > steps.length;
   const current = !finished ? steps[revealed - 1] : null;
   const isYourTurn = current && current.speaker === "you";
+  const isTheirTurn = current && current.speaker === "them";
+
+  function advance() {
+    const next = revealed + 1;
+    setRevealed(next);
+    if (next > steps.length && onComplete) onComplete();
+  }
 
   function submit() {
     if (!value.trim()) return;
     const ok = current.expected.some((exp) => normalize(value).includes(normalize(exp)));
     if (ok || attempt >= 1) {
       setAnswered((a) => ({ ...a, [revealed - 1]: value }));
-      const next = revealed + 1;
       setValue("");
       setAttempt(0);
-      setRevealed(next);
-      if (next > steps.length && onComplete) onComplete();
+      advance();
     } else {
       setAttempt(1);
     }
   }
 
+  // Mostra todas as falas já reveladas; a fala "them" atual entra na lista,
+  // mas a "you" atual só aparece depois de responderes.
+  const shownSteps = steps.slice(0, isYourTurn ? revealed - 1 : revealed);
+
   return (
     <div className="conversation-sim">
-      {steps.slice(0, revealed - (isYourTurn ? 1 : 0)).map((s, i) =>
+      {shownSteps.map((s, i) =>
         s.speaker === "them" ? (
           <button
             key={i}
@@ -56,6 +66,12 @@ export default function ConversationSim({ steps, onComplete }) {
             </div>
           )
         )
+      )}
+
+      {isTheirTurn && (
+        <button type="button" className="p-btn-outline conv-continue" onClick={advance}>
+          Continuar →
+        </button>
       )}
 
       {isYourTurn && (
