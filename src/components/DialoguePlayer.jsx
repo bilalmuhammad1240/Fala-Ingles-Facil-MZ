@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
 import { speak } from "../lib/speech";
 
-const NAME_BY_WHO = { A: "Zara", B: "Junior" };
-const COLOR_BY_WHO = { A: "c1", B: "c2" };
+const COLOR_CYCLE = ["c1", "c2", "c3"];
 
 function Avatar({ name, colorClass }) {
   const initials = name.slice(0, 2).toUpperCase();
   return <div className={`p-avatar ${colorClass}`}>{initials}</div>;
 }
 
-/** DialoguePlayer: revela as falas uma a uma (~2s de intervalo) e cada bolha é clicável para ouvir. */
+/**
+ * DialoguePlayer: revela as falas uma a uma (~2s de intervalo) e cada bolha é clicável para ouvir.
+ * A cor do avatar de cada interveniente (d.who) é atribuída dinamicamente pela ordem em que
+ * aparece pela primeira vez no diálogo — nunca fixa no código — para nunca desalinhar do
+ * conteúdo real (nomes das personagens definidos nos dados da lição).
+ */
 export default function DialoguePlayer({ dialogue }) {
   const [revealed, setRevealed] = useState(1);
 
@@ -28,6 +32,16 @@ export default function DialoguePlayer({ dialogue }) {
     next();
   }
 
+  const colorByWho = {};
+  let nextColorIdx = 0;
+  function colorFor(who) {
+    if (!colorByWho[who]) {
+      colorByWho[who] = COLOR_CYCLE[nextColorIdx % COLOR_CYCLE.length];
+      nextColorIdx++;
+    }
+    return colorByWho[who];
+  }
+
   return (
     <div className="dialogue-player">
       <button className="p-btn-outline" style={{ marginBottom: 16 }} onClick={playAll}>
@@ -40,7 +54,7 @@ export default function DialoguePlayer({ dialogue }) {
           className="p-chat-line p-chat-line-btn dialogue-in"
           onClick={() => speak(d.en, { rate: 1 })}
         >
-          <Avatar name={NAME_BY_WHO[d.who]} colorClass={COLOR_BY_WHO[d.who]} />
+          <Avatar name={d.who} colorClass={colorFor(d.who)} />
           <span className="p-chat-bubble">
             <span className="en">{d.en} <span className="audio-hint">🔊</span></span>
             <span className="pt2">{d.pt}</span>

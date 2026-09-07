@@ -19,15 +19,15 @@ export const lesson1 = {
 
   // ---- 4. Warm-up / Context ----------------------------------------------
   warmupDialogue: [
-    { who: "A", en: "Hello. My name is Ana.", pt: "Olá. O meu nome é Ana." },
-    { who: "B", en: "Hello. My name is John.", pt: "Olá. O meu nome é John." },
-    { who: "A", en: "I am from Mozambique.", pt: "Eu sou de Moçambique." },
-    { who: "B", en: "Nice to meet you.", pt: "Prazer em conhecer-te." },
-    { who: "A", en: "Nice to meet you too.", pt: "Igualmente." },
+    { who: "Ana", en: "Hello. My name is Ana.", pt: "Olá. O meu nome é Ana." },
+    { who: "Junior", en: "Hello. My name is Junior.", pt: "Olá. O meu nome é Junior." },
+    { who: "Ana", en: "I am from Mozambique.", pt: "Eu sou de Moçambique." },
+    { who: "Junior", en: "Nice to meet you.", pt: "Prazer em conhecer-te." },
+    { who: "Ana", en: "Nice to meet you too.", pt: "Igualmente." },
   ],
   warmupCheck: [
-    { q: "Quem se está a conhecer pela primeira vez?", options: ["Ana e John", "Só a Ana", "Só o John"], answer: 0 },
-    { q: "Qual é o nome da primeira pessoa a falar?", options: ["John", "Ana", "Zara"], answer: 1 },
+    { q: "Quem se está a conhecer pela primeira vez?", options: ["Ana e Junior", "Só a Ana", "Só o Junior"], answer: 0 },
+    { q: "Qual é o nome da primeira pessoa a falar?", options: ["Junior", "Ana", "Zara"], answer: 1 },
     { q: "De onde é a Ana?", options: ["Portugal", "Brasil", "Mozambique"], answer: 2 },
     { q: "Qual frase mostra simpatia ao conhecer alguém?", options: ["Hello.", "Nice to meet you.", "My name is Ana."], answer: 1 },
   ],
@@ -41,7 +41,7 @@ export const lesson1 = {
   ],
 
   // ---- 6. Listening --------------------------------------------------------
-  listeningName: { audio: "My name is Ana.", q: "Qual é o nome?", options: ["Ana", "John", "Zara"], answer: 0 },
+  listeningName: { audio: "My name is Ana.", q: "Qual é o nome?", options: ["Ana", "Junior", "Zara"], answer: 0 },
   listeningCountry: { audio: "I am from Mozambique.", q: "Qual é o país?", options: ["Portugal", "Mozambique", "Brazil"], answer: 1 },
   listeningMeaning: { audio: "Nice to meet you.", q: "O que significa esta frase?", options: ["Prazer em conhecer-te.", "Adeus.", "Como estás?"], answer: 0 },
   listeningOrder: {
@@ -135,10 +135,10 @@ export const lesson1 = {
   // ---- 14. Final Assessment ------------------------------------------------
   assessmentListening: [
     { audio: "Hello.", q: "O que ouviste?", options: ["Hello.", "Goodbye.", "Thank you."], answer: 0 },
-    { audio: "My name is John.", q: "Qual é o nome?", options: ["Ana", "John", "Zara"], answer: 1 },
+    { audio: "My name is Junior.", q: "Qual é o nome?", options: ["Ana", "Junior", "Zara"], answer: 1 },
     { audio: "I am from Mozambique.", q: "Qual é o país?", options: ["Mozambique", "Brazil", "Portugal"], answer: 0 },
     { audio: "Nice to meet you.", q: "O que significa esta frase?", options: ["Adeus.", "Prazer em conhecer-te.", "Como estás?"], answer: 1 },
-    { audio: "Hello. My name is Zara.", q: "Qual é o nome da pessoa?", options: ["Zara", "Ana", "John"], answer: 0 },
+    { audio: "Hello. My name is Zara.", q: "Qual é o nome da pessoa?", options: ["Zara", "Ana", "Junior"], answer: 0 },
   ],
   assessmentVocab: [
     { q: "Como cumprimentas alguém?", options: ["Hello.", "Nice to meet you.", "I am from..."], answer: 0 },
@@ -148,7 +148,7 @@ export const lesson1 = {
     { q: "\"Mozambique\" é...", options: ["um nome", "um país", "uma saudação"], answer: 1 },
   ],
   assessmentSentences: [
-    { words: ["name", "My", "is", "John"], correctOrder: ["My", "name", "is", "John"], translation: "O meu nome é John." },
+    { words: ["name", "My", "is", "Junior"], correctOrder: ["My", "name", "is", "Junior"], translation: "O meu nome é Junior." },
     { words: ["from", "I", "am", "Mozambique"], correctOrder: ["I", "am", "from", "Mozambique"], translation: "Eu sou de Moçambique." },
     { words: ["meet", "Nice", "you", "to"], correctOrder: ["Nice", "to", "meet", "you"], translation: "Prazer em conhecer-te." },
     { words: ["is", "name", "My", "Zara"], correctOrder: ["My", "name", "is", "Zara"], translation: "O meu nome é Zara." },
