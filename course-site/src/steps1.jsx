@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronDown } from "lucide-react";
-import { speak, LESSON1, SoundBars } from "./data.jsx";
+import { LESSON1, SoundBars } from "./data.jsx";
+import { playAudio, resolveAudioUrl, speakFallback } from "./audioPlayer.js";
 import { StepShell, ContinueButton, SoundCard, RevealPt } from "./ui.jsx";
 
 function HookStep({ accent, onComplete }) {
   const [played, setPlayed] = useState(false);
 
   function playHook() {
-    speak(LESSON1.hookEn);
+    playAudio("l1_hook", LESSON1.hookEn);
     setPlayed(true);
   }
 
@@ -39,7 +40,7 @@ function GrammarExplainStep({ accent, onComplete }) {
           {LESSON1.pattern.map((p, i) => (
             <button
               key={i}
-              onClick={() => speak(p.en)}
+              onClick={() => playAudio(`l1_pattern_${i}`, p.en)}
               className="flex items-center justify-between gap-3 py-2 px-2.5 rounded-xl transition text-left hover:bg-black/[0.03] active:scale-[0.99]"
             >
               <span className="font-mono text-sm font-medium">{p.en}</span>
@@ -50,7 +51,7 @@ function GrammarExplainStep({ accent, onComplete }) {
       </div>
       <div className="flex flex-col gap-2.5">
         {LESSON1.examples.map((ex, i) => (
-          <SoundCard key={i} onClick={() => speak(ex.en)} accent={accent}>
+          <SoundCard key={i} onClick={() => playAudio(`l1_example_${i}`, ex.en)} accent={accent}>
             {ex.en}
             <div className="mt-1"><RevealPt pt={ex.pt} /></div>
           </SoundCard>
@@ -72,7 +73,7 @@ function VocabStep({ accent, onComplete }) {
           return (
             <button
               key={i}
-              onClick={() => { speak(en); setTapped((s) => new Set(s).add(i)); }}
+              onClick={() => { playAudio(`l1_vocab_${i}`, en); setTapped((s) => new Set(s).add(i)); }}
               className="rounded-full border px-3 py-1.5 text-sm flex items-center gap-1.5 transition hover:scale-[1.03]"
               style={{ borderColor: isTapped ? accent : "#EAEAE7", background: isTapped ? `${accent}14` : "transparent" }}
             >
@@ -91,9 +92,9 @@ function VocabStep({ accent, onComplete }) {
 }
 
 /* Fully automatic dialogue: each line plays, waits 2s, then the next line
-   appears and plays on its own. Ana and Carlos get distinct vocal pitches
-   so the two voices are easy to tell apart. Tap any bubble to hear it again;
-   translations stay hidden until the learner asks for them. */
+   appears and plays on its own. Ana and Carlos use distinct pre-generated
+   voices once recorded (or distinct pitch as a fallback before that).
+   Tap any bubble to hear it again; translations stay hidden until asked. */
 function DialogueStep({ accent, onComplete }) {
   const dialogue = LESSON1.dialogue;
   const [shown, setShown] = useState(1);
@@ -101,6 +102,7 @@ function DialogueStep({ accent, onComplete }) {
   const [done, setDone] = useState(false);
   const scrollRef = useRef(null);
   const timerRef = useRef(null);
+  const audioRef = useRef(null);
 
   function pitchFor(side) {
     return side === "left" ? 1.18 : 0.82;
@@ -110,28 +112,46 @@ function DialogueStep({ accent, onComplete }) {
     let cancelled = false;
     const line = dialogue[shown - 1];
     if (!line) return;
-    try {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(line.en);
-      u.lang = "en-US";
-      u.rate = 0.72;
-      u.pitch = pitchFor(line.side);
-      u.onend = () => {
+
+    function afterLineEnds() {
+      if (cancelled) return;
+      setWaiting(true);
+      timerRef.current = setTimeout(() => {
         if (cancelled) return;
-        setWaiting(true);
-        timerRef.current = setTimeout(() => {
-          if (cancelled) return;
-          setWaiting(false);
-          if (shown < dialogue.length) setShown((s) => s + 1);
-          else setDone(true);
-        }, 2000);
-      };
-      u.onerror = u.onend;
-      window.speechSynthesis.speak(u);
-    } catch (e) { /* speech unavailable */ }
+        setWaiting(false);
+        if (shown < dialogue.length) setShown((s) => s + 1);
+        else setDone(true);
+      }, 2000);
+    }
+
+    (async () => {
+      const key = `l1_dialogue_${shown - 1}`;
+      const url = await resolveAudioUrl(key);
+      if (cancelled) return;
+      if (url) {
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        audio.onended = afterLineEnds;
+        audio.onerror = () => { speakFallback(line.en, pitchFor(line.side)); afterLineEnds(); };
+        audio.play().catch(() => { speakFallback(line.en, pitchFor(line.side)); afterLineEnds(); });
+      } else {
+        try {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(line.en);
+          u.lang = "en-US";
+          u.rate = 0.72;
+          u.pitch = pitchFor(line.side);
+          u.onend = afterLineEnds;
+          u.onerror = afterLineEnds;
+          window.speechSynthesis.speak(u);
+        } catch (e) { afterLineEnds(); }
+      }
+    })();
+
     return () => {
       cancelled = true;
       clearTimeout(timerRef.current);
+      if (audioRef.current) { try { audioRef.current.pause(); } catch (e) { /* noop */ } }
       try { window.speechSynthesis.cancel(); } catch (e) { /* noop */ }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -141,15 +161,13 @@ function DialogueStep({ accent, onComplete }) {
     if (scrollRef.current) scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [shown]);
 
-  function replay(line) {
-    try {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(line.en);
-      u.lang = "en-US";
-      u.rate = 0.72;
-      u.pitch = pitchFor(line.side);
-      window.speechSynthesis.speak(u);
-    } catch (e) { /* noop */ }
+  async function replay(line, idx) {
+    const key = `l1_dialogue_${idx}`;
+    const url = await resolveAudioUrl(key);
+    if (url) {
+      try { const a = new Audio(url); a.play(); return; } catch (e) { /* fall through */ }
+    }
+    speakFallback(line.en, pitchFor(line.side));
   }
 
   function skipWait() {
@@ -177,7 +195,7 @@ function DialogueStep({ accent, onComplete }) {
                   color: d.side === "left" ? "#FBF6EC" : "#102A3C",
                   outline: isLast ? `2px solid ${d.side === "left" ? accent : "#102A3C"}55` : "none",
                 }}
-                onClick={() => replay(d)}
+                onClick={() => replay(d, i)}
               >
                 <p className="text-sm font-medium">{d.en}</p>
                 <div className="mt-0.5 opacity-90">

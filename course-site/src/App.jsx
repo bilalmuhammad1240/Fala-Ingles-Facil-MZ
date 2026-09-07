@@ -3,6 +3,7 @@ import { Check, Volume2, Menu, X, Lock } from "lucide-react";
 import { ALL_LESSONS, LEGACY_LESSONS } from "./data.jsx";
 import { Lesson1Journey } from "./steps2.jsx";
 import LegacyLessonView from "./LegacyLessonView.jsx";
+import { preloadManifest } from "./audioPlayer.js";
 
 export default function App() {
   const [current, setCurrent] = useState(0);
@@ -12,6 +13,7 @@ export default function App() {
   const contentRef = useRef(null);
 
   useEffect(() => {
+    preloadManifest();
     try {
       const raw = window.localStorage.getItem("fife-progress");
       if (raw) setCompleted(JSON.parse(raw));

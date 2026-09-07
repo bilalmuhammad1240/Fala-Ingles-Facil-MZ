@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Check, ChevronRight, ChevronLeft, Mic, Square, RotateCcw, GripVertical } from "lucide-react";
-import { speak, LESSON1 } from "./data.jsx";
-import { blobToWav16kMono } from "./audioUtils.js";
+import { LESSON1 } from "./data.jsx";
+import { playAudio } from "./audioPlayer.js";
 import { StepShell, ContinueButton, StepAccordion, SoundCard, RevealPt, STEP_DEFS } from "./ui.jsx";
 import { HookStep, GrammarExplainStep, VocabStep, DialogueStep } from "./steps1.jsx";
 
@@ -129,39 +129,12 @@ function DragGrammarStep({ accent, onComplete }) {
   );
 }
 
-function PronScoreCard({ score, accent }) {
-  const overall = Math.round(score.PronScore ?? score.PronunciationScore ?? 0);
-  let label, emoji;
-  if (overall >= 80) { label = "Excelente pronúncia!"; emoji = "🌟"; }
-  else if (overall >= 60) { label = "Boa pronúncia — continua a praticar."; emoji = "👍"; }
-  else if (overall >= 40) { label = "Dá para perceber, mas pratica mais."; emoji = "🙂"; }
-  else { label = "Tenta outra vez, mais devagar e claro."; emoji = "🔁"; }
-  return (
-    <div className="rounded-xl p-3" style={{ background: `${accent}12` }}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-semibold">{emoji} {label}</span>
-        <span className="font-mono text-sm font-bold" style={{ color: accent }}>{overall}/100</span>
-      </div>
-      <div className="grid grid-cols-3 gap-2 text-center">
-        {[["Precisão", score.AccuracyScore], ["Fluência", score.FluencyScore], ["Completude", score.CompletenessScore]].map(([lbl, val]) => (
-          <div key={lbl}>
-            <div className="text-[10px] font-mono uppercase" style={{ color: "#8A8F98" }}>{lbl}</div>
-            <div className="text-sm font-semibold">{Math.round(val ?? 0)}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function SpeakingChallengeStep({ accent, onFinish }) {
   const QUESTIONS = LESSON1.speakingQuestions;
   const [qIdx, setQIdx] = useState(0);
   const [status, setStatus] = useState({});
   const [urls, setUrls] = useState({});
   const [feedback, setFeedback] = useState({});
-  const [scores, setScores] = useState({});
-  const [assessing, setAssessing] = useState({});
   const [liveLevel, setLiveLevel] = useState(0);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
@@ -224,29 +197,6 @@ function SpeakingChallengeStep({ accent, onFinish }) {
         setStatus((s) => ({ ...s, [qIdx]: "recorded" }));
         stream.getTracks().forEach((t) => t.stop());
         if (audioCtxRef.current) { try { audioCtxRef.current.close(); } catch (e) { /* noop */ } }
-
-        // Try a real pronunciation assessment (Azure). If it's not configured yet,
-        // or the request fails for any reason, we quietly keep the basic feedback above.
-        const capturedQIdx = qIdx;
-        const referenceText = QUESTIONS[capturedQIdx].en;
-        setAssessing((a) => ({ ...a, [capturedQIdx]: true }));
-        blobToWav16kMono(blob)
-          .then((wavBlob) =>
-            fetch("/api/pronunciation", {
-              method: "POST",
-              headers: { "Content-Type": "audio/wav", "X-Reference-Text": encodeURIComponent(referenceText) },
-              body: wavBlob,
-            })
-          )
-          .then(async (res) => {
-            if (!res.ok) throw new Error("assessment unavailable");
-            const data = await res.json();
-            const pa = data?.NBest?.[0]?.PronunciationAssessment;
-            if (!pa) throw new Error("no assessment data");
-            setScores((s) => ({ ...s, [capturedQIdx]: pa }));
-          })
-          .catch(() => { /* Azure not configured or request failed — basic feedback stands */ })
-          .finally(() => setAssessing((a) => ({ ...a, [capturedQIdx]: false })));
       };
       mr.start();
       setStatus((s) => ({ ...s, [qIdx]: "recording" }));
@@ -261,8 +211,6 @@ function SpeakingChallengeStep({ accent, onFinish }) {
     if (urls[qIdx]) URL.revokeObjectURL(urls[qIdx]);
     setUrls((u) => { const nu = { ...u }; delete nu[qIdx]; return nu; });
     setFeedback((f) => { const nf = { ...f }; delete nf[qIdx]; return nf; });
-    setScores((s) => { const ns = { ...s }; delete ns[qIdx]; return ns; });
-    setAssessing((a) => { const na = { ...a }; delete na[qIdx]; return na; });
     setStatus((s) => ({ ...s, [qIdx]: "idle" }));
   }
 
@@ -280,7 +228,7 @@ function SpeakingChallengeStep({ accent, onFinish }) {
         ))}
       </div>
       <div className="rounded-2xl p-5 md:p-6" style={{ background: "#F7F7F5" }}>
-        <SoundCard onClick={() => speak(q.en)} accent={accent} tag="OUVIR PRONÚNCIA">
+        <SoundCard onClick={() => playAudio(`l1_speaking_${qIdx}`, q.en)} accent={accent} tag="OUVIR PRONÚNCIA">
           {q.en}
         </SoundCard>
         <div className="mt-2 mb-5"><RevealPt pt={q.pt} /></div>
@@ -321,15 +269,8 @@ function SpeakingChallengeStep({ accent, onFinish }) {
         {st === "recorded" && (
           <div className="flex flex-col gap-3">
             <audio controls src={urls[qIdx]} className="w-full" />
-            {assessing[qIdx] && (
-              <p className="text-xs font-mono" style={{ color: "#8A8F98" }}>A avaliar pronúncia…</p>
-            )}
-            {scores[qIdx] ? (
-              <PronScoreCard score={scores[qIdx]} accent={accent} />
-            ) : (
-              !assessing[qIdx] && feedback[qIdx] && (
-                <p className="text-xs font-mono" style={{ color: "#8A8F98" }}>{feedback[qIdx]}</p>
-              )
+            {feedback[qIdx] && (
+              <p className="text-xs font-mono" style={{ color: "#8A8F98" }}>{feedback[qIdx]}</p>
             )}
             <div className="flex flex-wrap gap-2">
               <button onClick={redo} className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium" style={{ borderColor: "#D8D8D4" }}>

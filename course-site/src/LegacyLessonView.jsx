@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Check, Volume2, Sparkles, Mic, ChevronRight } from "lucide-react";
-import { speak, SoundBars } from "./data.jsx";
+import { SoundBars } from "./data.jsx";
+import { playAudio } from "./audioPlayer.js";
 
 function LegacyLessonView({ lesson, completedMap, onComplete, onGoNext, hasNext }) {
   const [quizAnswers, setQuizAnswers] = useState({});
@@ -24,7 +25,7 @@ function LegacyLessonView({ lesson, completedMap, onComplete, onGoNext, hasNext 
           <p className="font-display font-600 text-xl md:text-2xl" style={{ color: "#FBF6EC" }}>"{lesson.hookEn}"</p>
           <p className="text-sm mt-1" style={{ color: "#FBF6EC99" }}>{lesson.hookPt}</p>
         </div>
-        <button onClick={() => speak(lesson.hookEn)} className="flex-shrink-0 self-start sm:self-center flex items-center gap-2 rounded-full px-4 py-2.5 font-semibold text-sm transition hover:scale-105 active:scale-95" style={{ background: lesson.accent, color: "#102A3C" }}><Volume2 size={16} /> Ouvir e repetir</button>
+        <button onClick={() => playAudio(`l${lesson.id}_hook`, lesson.hookEn)} className="flex-shrink-0 self-start sm:self-center flex items-center gap-2 rounded-full px-4 py-2.5 font-semibold text-sm transition hover:scale-105 active:scale-95" style={{ background: lesson.accent, color: "#102A3C" }}><Volume2 size={16} /> Ouvir e repetir</button>
       </section>
 
       <section className="mb-6">
@@ -38,7 +39,7 @@ function LegacyLessonView({ lesson, completedMap, onComplete, onGoNext, hasNext 
         <div className="grid sm:grid-cols-3 gap-2">
           {lesson.examples.map((ex, i) => (
             <div key={i} className="rounded-xl p-3" style={{ background: `${lesson.accent}12` }}>
-              <div className="flex items-center justify-between mb-1"><p className="text-sm font-medium">{ex.en}</p><button onClick={() => speak(ex.en)} aria-label="Ouvir exemplo"><Volume2 size={14} style={{ color: lesson.accent }} /></button></div>
+              <div className="flex items-center justify-between mb-1"><p className="text-sm font-medium">{ex.en}</p><button onClick={() => playAudio(`l${lesson.id}_example_${i}`, ex.en)} aria-label="Ouvir exemplo"><Volume2 size={14} style={{ color: lesson.accent }} /></button></div>
               <p className="text-xs" style={{ color: "#8A8F98" }}>{ex.pt}</p>
             </div>
           ))}
@@ -48,7 +49,7 @@ function LegacyLessonView({ lesson, completedMap, onComplete, onGoNext, hasNext 
       <section className="mb-6">
         <h2 className="font-display font-600 text-lg mb-3">Vocabulário essencial</h2>
         <div className="flex flex-wrap gap-2">
-          {lesson.vocab.map(([en, pt], i) => (<button key={i} onClick={() => speak(en)} className="rounded-full border px-3 py-1.5 text-sm flex items-center gap-1.5 hover:scale-[1.03] transition" style={{ borderColor: "#EAEAE7" }}><span className="font-medium">{en}</span><span style={{ color: "#8A8F98" }}>· {pt}</span><Volume2 size={11} style={{ color: lesson.accent }} /></button>))}
+          {lesson.vocab.map(([en, pt], i) => (<button key={i} onClick={() => playAudio(`l${lesson.id}_vocab_${i}`, en)} className="rounded-full border px-3 py-1.5 text-sm flex items-center gap-1.5 hover:scale-[1.03] transition" style={{ borderColor: "#EAEAE7" }}><span className="font-medium">{en}</span><span style={{ color: "#8A8F98" }}>· {pt}</span><Volume2 size={11} style={{ color: lesson.accent }} /></button>))}
         </div>
       </section>
 
@@ -58,7 +59,7 @@ function LegacyLessonView({ lesson, completedMap, onComplete, onGoNext, hasNext 
           {lesson.dialogue.map((d, i) => (
             <div key={i} className={`flex ${d.who === "A" ? "justify-start" : "justify-end"}`}>
               <div className="max-w-[85%] sm:max-w-[70%] rounded-2xl px-4 py-2.5" style={{ background: d.who === "A" ? "#102A3C" : lesson.accent, color: d.who === "A" ? "#FBF6EC" : "#102A3C" }}>
-                <div className="flex items-center gap-2"><p className="text-sm font-medium">{d.en}</p><button onClick={() => speak(d.en)} aria-label="Ouvir fala" className="flex-shrink-0"><Volume2 size={12} /></button></div>
+                <div className="flex items-center gap-2"><p className="text-sm font-medium">{d.en}</p><button onClick={() => playAudio(`l${lesson.id}_dialogue_${i}`, d.en)} aria-label="Ouvir fala" className="flex-shrink-0"><Volume2 size={12} /></button></div>
                 <p className="text-xs mt-0.5 opacity-80">{d.pt}</p>
               </div>
             </div>

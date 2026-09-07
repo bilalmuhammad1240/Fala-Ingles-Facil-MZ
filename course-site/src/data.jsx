@@ -146,4 +146,31 @@ const ALL_LESSONS = [
   ...LEGACY_LESSONS.map((l) => ({ id: l.id, title: l.title, subtitle: l.subtitle, accent: l.accent })),
 ];
 
-export { ACCENTS, speak, SoundBars, LESSON1, LEGACY_LESSONS, ALL_LESSONS };
+/* ---------------------------------------------------------
+   AUDIO ITEM KEYS — used by both the admin panel (to know what
+   needs recording) and the lesson components (to know which key
+   to look up in the manifest). Keys are derived, not stored, so
+   the lesson content above never needs touching when this list
+   changes shape.
+--------------------------------------------------------- */
+function getAllAudioItems() {
+  const items = [];
+
+  items.push({ key: "l1_hook", text: LESSON1.hookEn, voiceRole: "narrator", lessonId: 1, lessonTitle: LESSON1.title, section: "Hook" });
+  LESSON1.pattern.forEach((p, i) => items.push({ key: `l1_pattern_${i}`, text: p.en, voiceRole: "narrator", lessonId: 1, lessonTitle: LESSON1.title, section: "Gramática" }));
+  LESSON1.examples.forEach((ex, i) => items.push({ key: `l1_example_${i}`, text: ex.en, voiceRole: "narrator", lessonId: 1, lessonTitle: LESSON1.title, section: "Exemplos" }));
+  LESSON1.vocab.forEach(([en], i) => items.push({ key: `l1_vocab_${i}`, text: en, voiceRole: "narrator", lessonId: 1, lessonTitle: LESSON1.title, section: "Vocabulário" }));
+  LESSON1.dialogue.forEach((d, i) => items.push({ key: `l1_dialogue_${i}`, text: d.en, voiceRole: d.side === "left" ? "ana" : "carlos", lessonId: 1, lessonTitle: LESSON1.title, section: "Diálogo" }));
+  LESSON1.speakingQuestions.forEach((q, i) => items.push({ key: `l1_speaking_${i}`, text: q.en, voiceRole: "narrator", lessonId: 1, lessonTitle: LESSON1.title, section: "Desafio de fala" }));
+
+  LEGACY_LESSONS.forEach((lesson) => {
+    items.push({ key: `l${lesson.id}_hook`, text: lesson.hookEn, voiceRole: "narrator", lessonId: lesson.id, lessonTitle: lesson.title, section: "Hook" });
+    lesson.examples.forEach((ex, i) => items.push({ key: `l${lesson.id}_example_${i}`, text: ex.en, voiceRole: "narrator", lessonId: lesson.id, lessonTitle: lesson.title, section: "Exemplos" }));
+    lesson.vocab.forEach(([en], i) => items.push({ key: `l${lesson.id}_vocab_${i}`, text: en, voiceRole: "narrator", lessonId: lesson.id, lessonTitle: lesson.title, section: "Vocabulário" }));
+    lesson.dialogue.forEach((d, i) => items.push({ key: `l${lesson.id}_dialogue_${i}`, text: d.en, voiceRole: d.who === "A" ? "ana" : "carlos", lessonId: lesson.id, lessonTitle: lesson.title, section: "Diálogo" }));
+  });
+
+  return items;
+}
+
+export { ACCENTS, speak, SoundBars, LESSON1, LEGACY_LESSONS, ALL_LESSONS, getAllAudioItems };
