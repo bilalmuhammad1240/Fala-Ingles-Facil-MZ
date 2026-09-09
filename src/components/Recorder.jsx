@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 
-export default function Recorder({ prompt, onRecorded }) {
-  const [state, setState] = useState("idle");
+export default function Recorder({ prompt }) {
+  const [state, setState] = useState("idle"); // idle | recording | recorded | error
   const [audioUrl, setAudioUrl] = useState(null);
   const mediaRef = useRef(null);
   const chunksRef = useRef([]);
@@ -17,7 +17,6 @@ export default function Recorder({ prompt, onRecorded }) {
         setAudioUrl(URL.createObjectURL(blob));
         setState("recorded");
         stream.getTracks().forEach((t) => t.stop());
-        if (onRecorded) onRecorded();
       };
       recorder.start();
       mediaRef.current = recorder;

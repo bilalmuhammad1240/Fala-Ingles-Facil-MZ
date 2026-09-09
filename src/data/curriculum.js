@@ -13,7 +13,7 @@ export const modules = [
         number: 1,
         title: "Greetings & Introductions",
         subtitle: "Cumprimentos e Apresentações",
-        canDo: "No final desta lição, consegues cumprimentar alguém, dizer o teu nome, dizer de onde és, e reagir a uma apresentação com simpatia.",
+        canDo: "No final desta lição, consegues cumprimentar alguém, apresentar-te (nome, origem, profissão) e reagir a uma apresentação, em situações formais e informais.",
         content: true, // esta lição já tem conteúdo completo abaixo
       },
       {

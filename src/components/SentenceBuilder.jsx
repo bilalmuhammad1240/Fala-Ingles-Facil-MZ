@@ -1,16 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-/**
- * SentenceBuilder: o aluno toca as palavras na ordem certa para formar a frase.
- * Feedback em duas fases (guia, secção 15):
- * 1ª tentativa errada -> "Almost, tenta outra vez"; 2ª tentativa errada -> revela a frase certa.
- * onComplete(isCorrect) é chamado uma vez, quando o exercício fica resolvido.
- */
-export default function SentenceBuilder({ words, correctOrder, translation, onComplete }) {
+/** SentenceBuilder: o aluno toca as palavras na ordem certa para formar a frase. */
+export default function SentenceBuilder({ words, correctOrder, translation }) {
   const [available, setAvailable] = useState(words.map((w, i) => ({ w, i })));
   const [chosen, setChosen] = useState([]);
-  const [attempt, setAttempt] = useState(0);
-  const [resolved, setResolved] = useState(false);
 
   function pick(item) {
     setChosen((c) => [...c, item]);
@@ -27,20 +20,6 @@ export default function SentenceBuilder({ words, correctOrder, translation, onCo
 
   const done = available.length === 0;
   const isCorrect = done && chosen.map((c) => c.w).join(" ") === correctOrder.join(" ");
-
-  useEffect(() => {
-    if (!done || resolved) return;
-    if (isCorrect) {
-      setResolved(true);
-      if (onComplete) onComplete(true);
-    } else if (attempt === 0) {
-      setAttempt(1);
-    } else {
-      setResolved(true);
-      if (onComplete) onComplete(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [done, isCorrect]);
 
   return (
     <div className="sentence-builder">
@@ -59,20 +38,10 @@ export default function SentenceBuilder({ words, correctOrder, translation, onCo
           </button>
         ))}
       </div>
-      {done && !isCorrect && !resolved && (
+      {done && (
         <div className="dragfill-feedback">
-          <span>Almost. Verifica a ordem das palavras e tenta outra vez.</span>
-          <button className="p-btn-outline" type="button" onClick={reset}>Tentar de novo</button>
-        </div>
-      )}
-      {resolved && !isCorrect && (
-        <div className="dragfill-feedback">
-          <span>A frase certa é: <b>{correctOrder.join(" ")}</b></span>
-        </div>
-      )}
-      {resolved && isCorrect && (
-        <div className="dragfill-feedback">
-          <span>✅ Correct!</span>
+          <span>{isCorrect ? "✅ Boa! Frase correta." : "❌ Ordem errada, tenta outra vez."}</span>
+          <button className="p-btn-outline" type="button" onClick={reset}>Repetir</button>
         </div>
       )}
       {translation && <p className="sb-hint">{translation}</p>}
